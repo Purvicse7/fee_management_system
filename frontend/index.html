@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAVKIS - Student Fee Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Landing Page -->
+    <div id="landing-page" class="page">
+        <header class="landing-header">
+            <div class="container">
+                <nav class="landing-nav">
+                    <div class="logo">
+                        <h2>Navkis</h2>
+                    </div>
+                    <div class="nav-actions">
+                        <button class="btn btn--outline" onclick="showLogin()">Login</button>
+                        <button class="btn btn--primary" onclick="showRegister()">Register</button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        
+        <main class="landing-main">
+            <div class="container">
+                <section class="hero">
+                    <div class="hero-content">
+                        <h1>Engineering Student Fee Management System</h1>
+                        <p>Streamline fee collection, payment processing, and financial management for engineering institutions with our comprehensive platform.</p>
+                        <div class="hero-actions">
+                            <button class="btn btn--primary btn--lg" onclick="showLogin()">Get Started</button>
+                            <button class="btn btn--outline btn--lg" onclick="scrollToFeatures()">Learn More</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="features" id="features">
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">👨‍🎓</div>
+                            <h3>Student Management</h3>
+                            <p>Comprehensive student records management with branch-wise organization and semester tracking.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💰</div>
+                            <h3>Fee Structure</h3>
+                            <p>Flexible fee configuration for different engineering branches, semesters, and fee types.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💳</div>
+                            <h3>Online Payments</h3>
+                            <p>Secure payment processing with automated receipt generation and transaction tracking.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h3>Analytics & Reports</h3>
+                            <p>Detailed financial reports, payment analytics, and revenue tracking dashboards.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Login Page -->
+    <div id="login-page" class="page auth-page hidden">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Login to Navkis</h2>
+                    <p>Access your fee management dashboard</p>
+                </div>
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="login-email" class="form-label">Email Address</label>
+                        <input type="email" id="login-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password" class="form-label">Password</label>
+                        <input type="password" id="login-password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-role" class="form-label">Login as</label>
+                        <select id="login-role" class="form-control" required>
+                            <option value="">Select Role</option>
+                            <option value="admin">Administrator</option>
+                            <option value="student">Student</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full-width">Login</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="#" onclick="showRegister()">Register here</a></p>
+                    <p><a href="#" onclick="showLanding()">← Back to Home</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="register-page" class="page auth-page hidden">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Register for Navkis</h2>
+                    <p>Create your account to get started</p>
+                </div>
+                <form id="register-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="register-name" class="form-label">Full Name</label>
+                        <input type="text" id="register-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email" class="form-label">Email Address</label>
+                        <input type="email" id="register-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password" class="form-label">Password</label>
+                        <input type="password" id="register-password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-role" class="form-label">Register as</label>
+                        <select id="register-role" class="form-control" required>
+                            <option value="">Select Role</option>
+                            <option value="admin">Administrator</option>
+                            <option value="student">Student</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full-width">Register</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="#" onclick="showLogin()">Login here</a></p>
+                    <p><a href="#" onclick="showLanding()">← Back to Home</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="page dashboard-page hidden">
+        <header class="dashboard-header">
+            <div class="dashboard-nav">
+                <div class="logo">
+                    <h3>Navkis Admin</h3>
+                </div>
+                <div class="nav-menu">
+                    <button class="nav-btn active" onclick="showAdminOverview()">Dashboard</button>
+                    <button class="nav-btn" onclick="showStudentManagement()">Students</button>
+                    <button class="nav-btn" onclick="showFeeManagement()">Fee Structure</button>
+                    <button class="nav-btn" onclick="showPaymentManagement()">Payments</button>
+                    <button class="nav-btn" onclick="showReports()">Reports</button>
+                </div>
+                <div class="nav-actions">
+                    <span class="user-info" id="admin-user-name">Admin User</span>
+                    <button class="btn btn--outline btn--sm" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </header>
+        
+        <main class="dashboard-main">
+            <!-- Admin Overview -->
+            <div id="admin-overview" class="dashboard-content">
+                <div class="container">
+                    <div class="page-header">
+                        <h1>Admin Dashboard</h1>
+                        <p>Overview of student fee management system</p>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">👨‍🎓</div>
+                            <div class="stat-content">
+                                <h3 id="total-students">0</h3>
+                                <p>Total Students</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-content">
+                                <h3 id="total-revenue">₹0</h3>
+                                <p>Total Revenue</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-content">
+                                <h3 id="pending-payments">0</h3>
+                                <p>Pending Payments</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-content">
+                                <h3 id="completed-payments">0</h3>
+                                <p>Completed Payments</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-sections">
+                        <div class="dashboard-section">
+                            <h3>Recent Activities</h3>
+                            <div class="activity-list" id="recent-activities">
+                                <!-- Activities will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h3>Revenue Overview</h3>
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="revenue-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Management -->
+            <div id="student-management" class="dashboard-content hidden">
+                <div class="container">
+                    <div class="page-header">
+                        <h1>Student Management</h1>
+                        <button class="btn btn--primary" onclick="showAddStudentModal()">Add Student</button>
+                    </div>
+                    
+                    <div class="search-filters">
+                        <input type="text" id="student-search" class="form-control" placeholder="Search students..." style="width: 300px;">
+                        <select id="branch-filter" class="form-control" style="width: 200px;">
+                            <option value="">All Branches</option>
+                        </select>
+                    </div>
+                    
+                    <div class="students-table-container">
+                        <table class="students-table">
+                            <thead>
+                                <tr>
+                                    <th>Roll Number</th>
+                                    <th>Name</th>
+                                    <th>Branch</th>
+                                    <th>Semester</th>
+                                    <th>Contact</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body">
+                                <!-- Students will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fee Management -->
+            <div id="fee-management" class="dashboard-content hidden">
+                <div class="container">
+                    <div class="page-header">
+                        <h1>Fee Structure Management</h1>
+                        <button class="btn btn--primary" onclick="showAddFeeStructureModal()">Add Fee Structure</button>
+                    </div>
+                    
+                    <div class="fee-structures-grid" id="fee-structures-grid">
+                        <!-- Fee structures will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Management -->
+            <div id="payment-management" class="dashboard-content hidden">
+                <div class="container">
+                    <div class="page-header">
+                        <h1>Payment Management</h1>
+                        <button class="btn btn--primary" onclick="showProcessPaymentModal()">Process Payment</button>
+                    </div>
+                    
+                    <div class="payments-table-container">
+                        <table class="payments-table">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Student</th>
+                                    <th>Amount</th>
+                                    <th>Fee Type</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payments-table-body">
+                                <!-- Payments will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports -->
+            <div id="reports-section" class="dashboard-content hidden">
+                <div class="container">
+                    <div class="page-header">
+                        <h1>Reports & Analytics</h1>
+                    </div>
+                    
+                    <div class="reports-grid">
+                        <div class="report-card">
+                            <h3>Branch-wise Revenue</h3>
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="branch-revenue-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="report-card">
+                            <h3>Payment Status Distribution</h3>
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="payment-status-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div id="student-dashboard" class="page dashboard-page hidden">
+        <header class="dashboard-header">
+            <div class="dashboard-nav">
+                <div class="logo">
+                    <h3>Navkis Student</h3>
+                </div>
+                <div class="nav-menu">
+                    <button class="nav-btn active" onclick="showStudentOverview()">Dashboard</button>
+                    <button class="nav-btn" onclick="showStudentFees()">Fee Details</button>
+                    <button class="nav-btn" onclick="showPaymentHistory()">Payment History</button>
+                    <button class="nav-btn" onclick="showMakePayment()">Make Payment</button>
+                </div>
+                <div class="nav-actions">
+                    <span class="user-info" id="student-user-name">Student User</span>
+                    <button class="btn btn--outline btn--sm" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </header>
+        
+        <main class="dashboard-main">
+            <!-- Student Overview -->
+            <div id="student-overview" class="dashboard-content">
+                <div class="container">
+                    <div class="page-header">
+                        <h1>Student Dashboard</h1>
+                        <p id="student-welcome">Welcome back!</p>
+                    </div>
+                    
+                    <div class="student-info-card">
+                        <div class="student-details" id="student-details">
+                            <!-- Student details will be populated by JavaScript -->
+                        </div>
+                        
+                        <div class="fee-summary">
+                            <h3>Fee Summary</h3>
+                            <div class="fee-summary-grid" id="fee-summary">
+                                <!-- Fee summary will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Fees -->
+            <div id="student-fees" class="dashboard-content hidden">
+                <div class="container">
+                    <div class="page-header">
+                        <h1>Fee Details</h1>
+                    </div>
+                    
+                    <div class="fee-breakdown-card" id="fee-breakdown">
+                        <!-- Fee breakdown will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            <div id="payment-history" class="dashboard-content hidden">
+                <div class="container">
+                    <div class="page-header">
+                        <h1>Payment History</h1>
+                    </div>
+                    
+                    <div class="payment-history-list" id="payment-history-list">
+                        <!-- Payment history will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Make Payment -->
+            <div id="make-payment" class="dashboard-content hidden">
+                <div class="container">
+                    <div class="page-header">
+                        <h1>Make Payment</h1>
+                    </div>
+                    
+                    <div class="payment-form-card">
+                        <form id="student-payment-form">
+                            <div class="form-group">
+                                <label for="payment-type" class="form-label">Fee Type</label>
+                                <select id="payment-type" class="form-control" required>
+                                    <option value="">Select Fee Type</option>
+                                    <option value="full">Full Semester Fee</option>
+                                    <option value="partial">Partial Payment</option>
+                                    <option value="hostel">Hostel Fee</option>
+                                    <option value="exam">Examination Fee</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="payment-amount" class="form-label">Amount (₹)</label>
+                                <input type="number" id="payment-amount" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn--primary btn--full-width">Proceed to Payment</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Student Modal -->
+    <div id="add-student-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Student</h3>
+                <button class="modal-close" onclick="closeModal('add-student-modal')">×</button>
+            </div>
+            <form id="add-student-form" class="modal-body">
+                <div class="form-group">
+                    <label for="new-student-name" class="form-label">Full Name</label>
+                    <input type="text" id="new-student-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-student-email" class="form-label">Email</label>
+                    <input type="email" id="new-student-email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-student-roll" class="form-label">Roll Number</label>
+                    <input type="text" id="new-student-roll" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-student-branch" class="form-label">Branch</label>
+                    <select id="new-student-branch" class="form-control" required>
+                        <option value="">Select Branch</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new-student-semester" class="form-label">Semester</label>
+                    <select id="new-student-semester" class="form-control" required>
+                        <option value="">Select Semester</option>
+                        <option value="1">1st Semester</option>
+                        <option value="2">2nd Semester</option>
+                        <option value="3">3rd Semester</option>
+                        <option value="4">4th Semester</option>
+                        <option value="5">5th Semester</option>
+                        <option value="6">6th Semester</option>
+                        <option value="7">7th Semester</option>
+                        <option value="8">8th Semester</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new-student-contact" class="form-label">Contact Number</label>
+                    <input type="tel" id="new-student-contact" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-student-address" class="form-label">Address</label>
+                    <textarea id="new-student-address" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="new-student-hostel"> Hostel Resident
+                    </label>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn btn--outline" onclick="closeModal('add-student-modal')">Cancel</button>
+                <button class="btn btn--primary" onclick="submitAddStudent()">Add Student</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Gateway Modal -->
+    <div id="payment-gateway-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Payment Gateway</h3>
+                <button class="modal-close" onclick="closeModal('payment-gateway-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-summary" id="payment-summary">
+                    <!-- Payment summary will be populated by JavaScript -->
+                </div>
+                <form id="payment-gateway-form">
+                    <div class="form-group">
+                        <label for="card-number" class="form-label">Card Number</label>
+                        <input type="text" id="card-number" class="form-control" placeholder="1234 5678 9012 3456" required>
+                    </div>
+                    <div class="flex gap-16">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="expiry-date" class="form-label">Expiry Date</label>
+                            <input type="text" id="expiry-date" class="form-control" placeholder="MM/YY" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="cvv" class="form-label">CVV</label>
+                            <input type="text" id="cvv" class="form-control" placeholder="123" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="cardholder-name" class="form-label">Cardholder Name</label>
+                        <input type="text" id="cardholder-name" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" onclick="closeModal('payment-gateway-modal')">Cancel</button>
+                <button class="btn btn--primary" onclick="processPayment()">Pay Now</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
