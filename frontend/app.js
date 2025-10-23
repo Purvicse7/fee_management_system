@@ -47,14 +47,14 @@ const sampleData = {
         },
         {
             id: "ST004",
-            name: "POORVI",
-            email: "poorvi@college.edu",
+            name: "Liya Guptha",
+            email: "liyaguptha@college.edu",
             rollNumber: "4YG23CS079",
-            branch: "CSE",
+            branch: "Computer Science Engineering",
             semester: 5,
             year: 3,
             contactNumber: "9876543299",
-            address: "456 Brigade Road, Bangalore",
+            address: "bangalore",
             hostelResident: false
         }
     ],
@@ -114,11 +114,7 @@ const sampleData = {
         "Computer Science Engineering",
         "Electronics & Communication",
         "Mechanical Engineering",
-        "Civil Engineering",
-        "Electrical Engineering",
-        "Information Technology",
-        "Aeronautical Engineering",
-        "Chemical Engineering"
+        "Civil Engineering"
     ],
     feeTypes: [
         "Tuition Fee",
@@ -513,7 +509,7 @@ function updateRecentActivities() {
         },
         {
             title: 'Fee structure updated',
-            meta: 'Computer Science Engineering - Semester 6',
+            meta: 'Computer Science Engineering - Semester 5',
             time: '1 day ago'
         }
     ];
@@ -761,12 +757,24 @@ function renderPaymentHistory() {
 }
 
 // Modal Functions
+// Modal Functions
 function showModal(modalId) {
-    document.getElementById(modalId).classList.remove('hidden');
+    const el = document.getElementById(modalId);
+    if (!el) return;
+    el.classList.remove('hidden');
+    // Clear any inline 'display: none' so the modal's inline styles (like display:flex)
+    // or CSS rules can take effect. Useful for dynamically-created modals which set
+    // inline display during creation.
+    try { el.style.display = 'flex'; } catch (e) {}
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
+    const el = document.getElementById(modalId);
+    if (!el) return;
+    el.classList.add('hidden');
+    // Force inline display none to ensure it is hidden even if element had inline
+    // display styles set earlier (inline styles have higher priority than CSS classes).
+    try { el.style.display = 'none'; } catch (e) {}
 }
 
 function showAddStudentModal() {
@@ -996,7 +1004,209 @@ function initializePaymentStatusChart() {
 
 // Utility Functions
 function editStudent(studentId) {
-    showNotification('Edit student functionality would be implemented here.', 'info');
+    const modalId = 'edit-student-modal';
+    let modal = document.getElementById(modalId);
+
+    // Find student to edit
+    const student = students.find(s => s.id === studentId);
+    if (!student) { showNotification('Student not found.', 'error'); return; }
+
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal';
+        // Build markup so backdrop and content have predictable stacking and pointer-events
+        modal.innerHTML = `
+            <div class="modal-backdrop" style="position:absolute; inset:0; background:rgba(0,0,0,0.45);"></div>
+            <div class="modal-content modal--edit-student" style="position:relative; z-index:1001; pointer-events:auto;">
+                <div class="modal-header"><h3>Edit Student</h3></div>
+                <div class="modal-body">
+                    <div class="form-row"><label>Name</label><input id="edit-name" type="text" /></div>
+                    <div class="form-row"><label>Email</label><input id="edit-email" type="email" /></div>
+                    <div class="form-row"><label>Roll Number</label><input id="edit-roll" type="text" /></div>
+                    <div class="form-row"><label>Branch</label><input id="edit-branch" type="text" /></div>
+                    <div class="form-row"><label>Semester</label><input id="edit-semester" type="number" min="1" /></div>
+                    <div class="form-row"><label>Contact Number</label><input id="edit-contact" type="text" /></div>
+                    <div class="form-row"><label>Address</label><input id="edit-address" type="text" /></div>
+                    <div class="form-row"><label><input id="edit-hostel" type="checkbox" /> Hostel Resident</label></div>
+                </div>
+                <div class="modal-footer modal-actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+                    <button id="edit-cancel" class="btn" type="button">Cancel</button>
+                    <button id="edit-save" class="btn btn--primary" type="button">Save</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        // start hidden until explicitly shown
+        modal.classList.add('hidden');
+        // ensure modal is on top and that modal-content sits above backdrop so buttons receive clicks
+        try {
+            // Place modal full screen and make sure backdrop covers entire viewport
+            modal.style.position = 'fixed';
+            modal.style.left = '0';
+            modal.style.top = '0';
+            modal.style.right = '0';
+            modal.style.bottom = '0';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.zIndex = '99999';
+            // Backdrop should sit behind content but be clickable to close
+            const backdropEl = modal.querySelector('.modal-backdrop');
+            const contentEl = modal.querySelector('.modal-content');
+            if (backdropEl) {
+                backdropEl.style.zIndex = '99998';
+                backdropEl.style.pointerEvents = 'auto';
+                backdropEl.style.position = 'absolute';
+                backdropEl.style.left = '0';
+                backdropEl.style.top = '0';
+                backdropEl.style.right = '0';
+                backdropEl.style.bottom = '0';
+            }
+            if (contentEl) {
+                contentEl.style.zIndex = '99999';
+                contentEl.style.pointerEvents = 'auto';
+                contentEl.style.position = 'relative';
+                // give content a max-width so it doesn't overflow
+                contentEl.style.maxWidth = '95%';
+                contentEl.style.boxSizing = 'border-box';
+            }
+        } catch (e) {}
+
+        const style = document.createElement('style');
+        style.id = 'edit-student-styles';
+        style.textContent = `
+            #${modalId} { position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:9999; }
+            #${modalId} .modal-content { background:#fff; padding:18px; width:480px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+            #${modalId} .form-row { display:flex; flex-direction:column; margin:8px 0; }
+            #${modalId} .form-row label { font-size:0.9em; margin-bottom:6px; color:#333; }
+            #${modalId} .form-row input[type=text], #${modalId} .form-row input[type=email], #${modalId} .form-row input[type=number] { padding:8px 10px; border:1px solid #ddd; border-radius:4px; }
+            #${modalId} .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+            #${modalId} .btn--primary { background:#1FB8CD; color:#fff; border-color:transparent; }
+        `;
+        document.head.appendChild(style);
+
+        // Cancel handler - attach with addEventListener and stop propagation
+        const cancelBtn = modal.querySelector('#edit-cancel');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                try { console.log('edit-cancel clicked'); } catch (e) {}
+                closeModal(modalId);
+            });
+        }
+
+        // Close when clicking on the overlay (outside modal-content)
+        modal.addEventListener('click', (e) => {
+            if (e.target && e.target.classList && e.target.classList.contains('modal-backdrop')) {
+                closeModal(modalId);
+            }
+            if (e.target === modal) closeModal(modalId);
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function escListener(e) {
+            if (e.key === 'Escape') {
+                if (modal && !modal.classList.contains('hidden')) closeModal(modalId);
+            }
+        });
+
+        // Attach a persistent save handler that reads the student id from the modal's
+        // dataset when clicked. This avoids cloning nodes while still preventing stale
+        // closures when the modal is reused for different students.
+        const saveBtn = modal.querySelector('#edit-save');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function (ev) {
+                ev.stopPropagation();
+                try { console.log('edit-save clicked'); } catch (e) {}
+                const sid = modal.dataset.editingStudent;
+                const studentIdNow = sid || null;
+                if (!studentIdNow) {
+                    showNotification('No student selected to save.', 'error');
+                    return;
+                }
+
+                // Resolve the student fresh by id
+                const targetStudent = students.find(s => s.id === studentIdNow);
+                if (!targetStudent) { showNotification('Student not found.', 'error'); return; }
+
+                const nameEl = modal.querySelector('#edit-name');
+                const emailEl = modal.querySelector('#edit-email');
+                const rollEl = modal.querySelector('#edit-roll');
+                const branchEl = modal.querySelector('#edit-branch');
+                const semesterEl = modal.querySelector('#edit-semester');
+                const contactEl = modal.querySelector('#edit-contact');
+                const addressEl = modal.querySelector('#edit-address');
+                const hostelElInner = modal.querySelector('#edit-hostel');
+
+                const name = nameEl ? nameEl.value.trim() : '';
+                const email = emailEl ? emailEl.value.trim() : '';
+                const roll = rollEl ? rollEl.value.trim() : '';
+                const branch = branchEl ? branchEl.value.trim() : '';
+                const semester = semesterEl ? parseInt(semesterEl.value, 10) : NaN;
+                const contact = contactEl ? contactEl.value.trim() : '';
+                const address = addressEl ? addressEl.value.trim() : '';
+                const hostel = hostelElInner ? hostelElInner.checked : false;
+
+                if (!name || !email || !roll || !branch || !semester) {
+                    showNotification('Please fill required fields (name, email, roll, branch, semester).', 'error');
+                    return;
+                }
+
+                // Check roll number uniqueness (allow same roll for this student)
+                const otherWithRoll = students.find(s => s.rollNumber === roll && s.id !== studentIdNow);
+                if (otherWithRoll) {
+                    showNotification('Roll number already exists for another student.', 'error');
+                    return;
+                }
+
+                // Apply changes
+                targetStudent.name = name;
+                targetStudent.email = email;
+                targetStudent.rollNumber = roll;
+                targetStudent.branch = branch;
+                targetStudent.semester = semester;
+                targetStudent.contactNumber = contact;
+                targetStudent.address = address;
+                targetStudent.hostelResident = hostel;
+
+                // If the edited student is the current user, update currentUser fields
+                if (currentUser && currentUser.email === email) {
+                    currentUser.name = name;
+                    currentUser.email = email;
+                }
+
+                // Close and refresh
+                const modalEl = document.getElementById(modalId);
+                if (modalEl) modalEl.classList.add('hidden');
+                renderStudentsTable();
+                showNotification('Student updated successfully.', 'success');
+                try { renderStudentDetails(); } catch (e) {}
+                try { updateAdminStats(); } catch (e) {}
+            });
+        }
+    }
+
+    // Prefill fields
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    setVal('edit-name', student.name || '');
+    setVal('edit-email', student.email || '');
+    setVal('edit-roll', student.rollNumber || '');
+    setVal('edit-branch', student.branch || '');
+    setVal('edit-semester', student.semester || '');
+    setVal('edit-contact', student.contactNumber || '');
+    setVal('edit-address', student.address || '');
+    const hostelEl = document.getElementById('edit-hostel'); if (hostelEl) hostelEl.checked = !!student.hostelResident;
+
+    // Set the current editing student id onto the modal so the persistent save
+    // listener (attached at creation) reads the correct id when clicked.
+    const modalEl = document.getElementById(modalId);
+    if (modalEl) {
+        modalEl.dataset.editingStudent = studentId;
+    }
+
+    // Use showModal so inline display is set (some codepaths/setters depend on inline styles)
+    showModal(modalId);
 }
 
 function deleteStudent(studentId) {
@@ -1008,15 +1218,324 @@ function deleteStudent(studentId) {
 }
 
 function viewPaymentReceipt(paymentId) {
-    showNotification('Receipt download functionality would be implemented here.', 'info');
+    // Find the payment
+    const payment = payments.find(p => p.id === paymentId);
+    if (!payment) {
+        showNotification('Payment not found.', 'error');
+        return;
+    }
+
+    const student = students.find(s => s.id === payment.studentId) || { name: 'Unknown', rollNumber: '' };
+
+    // Build receipt HTML
+    const receiptHtml = `
+        <html>
+        <head>
+            <title>Payment Receipt - ${payment.transactionId}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .receipt { max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; }
+                .header { text-align: center; margin-bottom: 20px; }
+                .row { display: flex; justify-content: space-between; margin: 6px 0; }
+                .total { font-size: 1.25em; font-weight: bold; margin-top: 12px; }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">
+                <div class="header">
+                    <h2>College Fee Management</h2>
+                    <div>Payment Receipt</div>
+                </div>
+                <div class="row"><div>Transaction ID:</div><div>${payment.transactionId}</div></div>
+                <div class="row"><div>Payment ID:</div><div>${payment.id}</div></div>
+                <div class="row"><div>Student:</div><div>${student.name} (${student.rollNumber})</div></div>
+                <div class="row"><div>Fee Type:</div><div>${payment.feeType}</div></div>
+                <div class="row"><div>Date:</div><div>${new Date(payment.paymentDate).toLocaleDateString()}</div></div>
+                <div class="row total"><div>Amount Paid:</div><div>₹${payment.amount.toLocaleString()}</div></div>
+                <div style="margin-top:18px; font-size:0.9em; color:#666">This is a system generated receipt.</div>
+            </div>
+            <script>
+                window.onload = function() { window.print(); };
+            </script>
+        </body>
+        </html>
+    `;
+
+    const receiptWindow = window.open('', '_blank', 'width=700,height=800');
+    if (!receiptWindow) {
+        showNotification('Unable to open receipt window. Please allow popups for this site.', 'error');
+        return;
+    }
+    receiptWindow.document.open();
+    receiptWindow.document.write(receiptHtml);
+    receiptWindow.document.close();
 }
 
 function showProcessPaymentModal() {
-    showNotification('Process payment functionality would be implemented here.', 'info');
+    // Build a simple in-page modal form dynamically to process a payment by admin
+    const modalId = 'admin-process-payment-modal';
+    let modal = document.getElementById(modalId);
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>Process Payment</h3>
+                <div class="form-row">
+                    <label>Student (type to search by ID or name)</label>
+                    <input id="proc-student-input" list="proc-student-datalist" placeholder="Type student name..." />
+                    <datalist id="proc-student-datalist"></datalist>
+                </div>
+                <div class="form-row">
+                    <label>Fee Type</label>
+                    <input id="proc-fee-type" type="text" placeholder="Fee Type (e.g. Semester Fee)" />
+                </div>
+                <div class="form-row">
+                    <label>Amount (₹)</label>
+                    <input id="proc-amount" type="number" min="0" />
+                </div>
+                <div class="modal-actions">
+                    <button id="proc-cancel" class="btn">Cancel</button>
+                    <button id="proc-submit" class="btn btn--primary">Process</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Basic styles (only added once)
+        const style = document.createElement('style');
+        style.textContent = `
+            .modal { position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999; }
+            .modal-content { background:#fff; padding:20px; width:360px; border-radius:6px; }
+            .form-row { margin:8px 0; display:flex; flex-direction:column; }
+            .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Populate searchable datalist for students
+    const studentInput = document.getElementById('proc-student-input');
+    const studentDatalist = document.getElementById('proc-student-datalist');
+    studentDatalist.innerHTML = '';
+    students.forEach(s => {
+        const opt = document.createElement('option');
+        // value shown to user; include id and name for clarity
+        opt.value = `${s.id} - ${s.name}`;
+        studentDatalist.appendChild(opt);
+    });
+    studentInput.value = '';
+
+    // Show modal
+    modal.classList.remove('hidden');
+
+    document.getElementById('proc-cancel').onclick = () => {
+        modal.classList.add('hidden');
+    };
+
+    document.getElementById('proc-submit').onclick = () => {
+        const raw = studentInput.value.trim();
+        const feeType = document.getElementById('proc-fee-type').value.trim();
+        const amount = parseFloat(document.getElementById('proc-amount').value);
+
+        // Resolve student id from input which may contain "ID - Name" or just name/id
+        const resolveStudentId = (input) => {
+            if (!input) return null;
+            // If input contains " - " and starts with an ID like ST001, extract it
+            if (input.includes(' - ')) {
+                const parts = input.split(' - ');
+                const maybeId = parts[0].trim();
+                if (students.find(s => s.id === maybeId)) return maybeId;
+            }
+
+            // Exact ID match
+            const byId = students.find(s => s.id.toLowerCase() === input.toLowerCase());
+            if (byId) return byId.id;
+
+            // Match by rollNumber
+            const byRoll = students.find(s => s.rollNumber && s.rollNumber.toLowerCase() === input.toLowerCase());
+            if (byRoll) return byRoll.id;
+
+            // Match by exact name (case-insensitive)
+            const byNameExact = students.find(s => s.name.toLowerCase() === input.toLowerCase());
+            if (byNameExact) return byNameExact.id;
+
+            // Partial name match (first match)
+            const byNamePartial = students.find(s => s.name.toLowerCase().includes(input.toLowerCase()));
+            if (byNamePartial) return byNamePartial.id;
+
+            // No match
+            return null;
+        };
+
+        const studentId = resolveStudentId(raw);
+
+        if (!studentId) {
+            showNotification('Student not found. Type name and pick from suggestions.', 'error');
+            return;
+        }
+
+        if (!feeType || !amount || isNaN(amount) || amount <= 0) {
+            showNotification('Please provide valid fee type and amount.', 'error');
+            return;
+        }
+
+        const transactionId = 'TXN' + Date.now();
+        const newPayment = {
+            id: 'PAY' + String(payments.length + 1).padStart(3, '0'),
+            studentId,
+            amount,
+            feeType,
+            paymentDate: new Date().toISOString().split('T')[0],
+            transactionId,
+            status: 'Completed'
+        };
+
+        payments.push(newPayment);
+        modal.classList.add('hidden');
+        renderPaymentsTable();
+        updateAdminStats();
+        showNotification(`Processed payment ₹${amount.toLocaleString()} (ID: ${transactionId})`, 'success');
+    };
 }
 
 function showAddFeeStructureModal() {
-    showNotification('Add fee structure functionality would be implemented here.', 'info');
+    const modalId = 'add-fee-structure-modal';
+    let modal = document.getElementById(modalId);
+
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content modal--fee">
+                <h3>Add Fee Structure</h3>
+                <div class="form-row">
+                    <label>Branch</label>
+                    <input id="fee-branch" type="text" placeholder="e.g. Computer Science Engineering" />
+                </div>
+                <div class="form-row">
+                    <label>Semester</label>
+                    <input id="fee-semester" type="number" min="1" />
+                </div>
+                <div class="form-row">
+                    <label>Tuition Fee (₹)</label>
+                    <input id="fee-tuition" type="number" min="0" />
+                </div>
+                <div class="form-row">
+                    <label>Lab Fee (₹)</label>
+                    <input id="fee-lab" type="number" min="0" />
+                </div>
+                <div class="form-row">
+                    <label>Library Fee (₹)</label>
+                    <input id="fee-library" type="number" min="0" />
+                </div>
+                <div class="form-row">
+                    <label>Hostel Fee (₹)</label>
+                    <input id="fee-hostel" type="number" min="0" />
+                </div>
+                <div class="form-row">
+                    <label>Exam Fee (₹)</label>
+                    <input id="fee-exam" type="number" min="0" />
+                </div>
+                <div class="form-row">
+                    <label>Development Fee (₹)</label>
+                    <input id="fee-development" type="number" min="0" />
+                </div>
+                <div class="modal-actions">
+                    <button id="fee-cancel" class="btn">Cancel</button>
+                    <button id="fee-save" class="btn btn--primary">Save</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Inject styles (scoped minimal styles)
+        const style = document.createElement('style');
+        style.id = 'fee-modal-styles';
+        style.textContent = `
+            #${modalId} { position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:9999; }
+            #${modalId} .modal-content { background:#fff; padding:18px; width:420px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+            #${modalId} h3 { margin:0 0 12px 0; }
+            #${modalId} .form-row { display:flex; flex-direction:column; margin:8px 0; }
+            #${modalId} .form-row label { font-size:0.9em; margin-bottom:6px; color:#333; }
+            #${modalId} .form-row input { padding:8px 10px; border:1px solid #ddd; border-radius:4px; }
+            #${modalId} .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+            #${modalId} .btn { padding:8px 12px; border-radius:4px; border:1px solid #ccc; background:#f5f5f5; cursor:pointer; }
+            #${modalId} .btn--primary { background:#1FB8CD; color:#fff; border-color:transparent; }
+        `;
+        document.head.appendChild(style);
+
+        // Wire up buttons
+        document.getElementById('fee-cancel').addEventListener('click', () => {
+            modal.classList.add('hidden');
+            clearFeeModalInputs();
+        });
+
+        document.getElementById('fee-save').addEventListener('click', async () => {
+            // Read and validate inputs
+            const branch = document.getElementById('fee-branch').value.trim();
+            const semester = parseInt(document.getElementById('fee-semester').value, 10);
+            const tuitionFee = parseFloat(document.getElementById('fee-tuition').value) || 0;
+            const labFee = parseFloat(document.getElementById('fee-lab').value) || 0;
+            const libraryFee = parseFloat(document.getElementById('fee-library').value) || 0;
+            const hostelFee = parseFloat(document.getElementById('fee-hostel').value) || 0;
+            const examFee = parseFloat(document.getElementById('fee-exam').value) || 0;
+            const developmentFee = parseFloat(document.getElementById('fee-development').value) || 0;
+
+            if (!branch) { showNotification('Branch is required.', 'error'); return; }
+            if (!semester || isNaN(semester) || semester < 1) { showNotification('Valid semester is required.', 'error'); return; }
+
+            const newStructure = { branch, semester, tuitionFee, labFee, libraryFee, hostelFee, examFee, developmentFee };
+
+            // Optimistically add locally
+            feeStructures.push(newStructure);
+            renderFeeStructures();
+
+            // Prepare payload for backend: compute total amount and a description
+            const amount = tuitionFee + labFee + libraryFee + hostelFee + examFee + developmentFee;
+            const description = `Tuition:${tuitionFee}, Lab:${labFee}, Library:${libraryFee}, Hostel:${hostelFee}, Exam:${examFee}, Dev:${developmentFee}`;
+
+            // Attempt to POST to backend if available
+            const token = localStorage.getItem('authToken');
+            try {
+                const resp = await fetch('http://localhost:3000/api/fee-structures', {
+                    method: 'POST',
+                    headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { 'Authorization': `Bearer ${token}` } : {}),
+                    body: JSON.stringify({ branch, semester, amount, description })
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    showNotification('Fee structure saved to server and added locally.', 'success');
+                } else {
+                    // server returned error - keep local copy but inform user
+                    let errMsg = 'Server error while saving fee structure.';
+                    try { const body = await resp.json(); if (body && body.message) errMsg = body.message; } catch (e) {}
+                    showNotification(`Saved locally. ${errMsg}`, 'error');
+                }
+            } catch (err) {
+                // Network error or backend down - keep local copy and inform
+                showNotification('Saved locally. Could not reach backend: ' + err.message, 'error');
+            }
+
+            modal.classList.add('hidden');
+            clearFeeModalInputs();
+        });
+    }
+
+    // Show modal and focus first field
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        const first = document.getElementById('fee-branch');
+        if (first) first.focus();
+    }, 50);
+
+    function clearFeeModalInputs() {
+        ['fee-branch','fee-semester','fee-tuition','fee-lab','fee-library','fee-hostel','fee-exam','fee-development']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    }
 }
 
 function showNotification(message, type = 'info') {
