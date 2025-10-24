@@ -1469,7 +1469,9 @@ function showAddFeeStructureModal() {
 
         // Wire up buttons
         document.getElementById('fee-cancel').addEventListener('click', () => {
-            modal.classList.add('hidden');
+            // Use shared helper so we also set inline display to 'none' which
+            // has higher precedence than the ID-based CSS rule injected for this modal.
+            closeModal(modalId);
             clearFeeModalInputs();
         });
 
@@ -1520,13 +1522,17 @@ function showAddFeeStructureModal() {
                 showNotification('Saved locally. Could not reach backend: ' + err.message, 'error');
             }
 
-            modal.classList.add('hidden');
+            // Close via helper to ensure it is hidden even when an ID selector
+            // sets display:flex in the injected styles.
+            closeModal(modalId);
             clearFeeModalInputs();
         });
     }
 
-    // Show modal and focus first field
-    modal.classList.remove('hidden');
+    // Show modal and focus first field. Use showModal so inline display is set
+    // consistently (some CSS uses an ID selector with display:flex which would
+    // otherwise override the .hidden class).
+    showModal(modalId);
     setTimeout(() => {
         const first = document.getElementById('fee-branch');
         if (first) first.focus();
