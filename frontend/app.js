@@ -12,10 +12,10 @@ const sampleData = {
         {
             id: "ST001",
             name: "Rahul Kumar",
-            email: "rahul.kumar@college.edu",
-            rollNumber: "21CS001",
+            email: "rahul.kumar@gmail.com",
+            rollNumber: "4YG23CS029",
             branch: "Computer Science Engineering",
-            semester: 6,
+            semester: 5,
             year: 3,
             contactNumber: "9876543210",
             address: "123 MG Road, Bangalore",
@@ -24,10 +24,10 @@ const sampleData = {
         {
             id: "ST002",
             name: "Priya Sharma",
-            email: "priya.sharma@college.edu",
-            rollNumber: "21EC001",
+            email: "priya.sharma@gmail.com",
+            rollNumber: "4YG24EC019",
             branch: "Electronics & Communication",
-            semester: 4,
+            semester: 3,
             year: 2,
             contactNumber: "9876543211",
             address: "456 Brigade Road, Bangalore",
@@ -36,10 +36,10 @@ const sampleData = {
         {
             id: "ST003",
             name: "Arjun Patel",
-            email: "arjun.patel@college.edu",
-            rollNumber: "21ME001",
+            email: "arjun.patel@gmail.com",
+            rollNumber: "4YG22ME001",
             branch: "Mechanical Engineering",
-            semester: 8,
+            semester: 7,
             year: 4,
             contactNumber: "9876543212",
             address: "789 Commercial Street, Bangalore",
@@ -48,7 +48,7 @@ const sampleData = {
         {
             id: "ST004",
             name: "Liya Guptha",
-            email: "liyaguptha@college.edu",
+            email: "liyaguptha@gmail.com",
             rollNumber: "4YG23CS079",
             branch: "Computer Science Engineering",
             semester: 5,
@@ -61,7 +61,7 @@ const sampleData = {
     feeStructures: [
         {
             branch: "Computer Science Engineering",
-            semester: 6,
+            semester: 5,
             tuitionFee: 75000,
             labFee: 15000,
             libraryFee: 5000,
@@ -71,7 +71,7 @@ const sampleData = {
         },
         {
             branch: "Electronics & Communication",
-            semester: 4,
+            semester: 3,
             tuitionFee: 70000,
             labFee: 12000,
             libraryFee: 5000,
@@ -81,7 +81,7 @@ const sampleData = {
         },
         {
             branch: "Mechanical Engineering",
-            semester: 8,
+            semester: 7,
             tuitionFee: 65000,
             labFee: 10000,
             libraryFee: 5000,
@@ -653,30 +653,37 @@ function renderStudentDetails() {
     
     // Render fee summary
     const feeStructure = feeStructures.find(f => f.branch === student.branch && f.semester === student.semester);
+    const summaryContainer = document.getElementById('fee-summary');
     if (feeStructure) {
         const totalFee = feeStructure.tuitionFee + feeStructure.labFee + feeStructure.libraryFee + 
                         (student.hostelResident ? feeStructure.hostelFee : 0) + 
                         feeStructure.examFee + feeStructure.developmentFee;
-        
+
         const studentPayments = payments.filter(p => p.studentId === student.id);
         const paidAmount = studentPayments.reduce((sum, p) => sum + p.amount, 0);
         const pendingAmount = totalFee - paidAmount;
-        
-        const summaryContainer = document.getElementById('fee-summary');
-        summaryContainer.innerHTML = `
-            <div class="fee-summary-item">
-                <div class="fee-summary-amount total">₹${totalFee.toLocaleString()}</div>
-                <div class="fee-summary-label">Total Fee</div>
-            </div>
-            <div class="fee-summary-item">
-                <div class="fee-summary-amount paid">₹${paidAmount.toLocaleString()}</div>
-                <div class="fee-summary-label">Paid</div>
-            </div>
-            <div class="fee-summary-item">
-                <div class="fee-summary-amount pending">₹${Math.max(0, pendingAmount).toLocaleString()}</div>
-                <div class="fee-summary-label">Pending</div>
-            </div>
-        `;
+
+        if (summaryContainer) {
+            summaryContainer.innerHTML = `
+                <div class="fee-summary-item">
+                    <div class="fee-summary-amount total">₹${totalFee.toLocaleString()}</div>
+                    <div class="fee-summary-label">Total Fee</div>
+                </div>
+                <div class="fee-summary-item">
+                    <div class="fee-summary-amount paid">₹${paidAmount.toLocaleString()}</div>
+                    <div class="fee-summary-label">Paid</div>
+                </div>
+                <div class="fee-summary-item">
+                    <div class="fee-summary-amount pending">₹${Math.max(0, pendingAmount).toLocaleString()}</div>
+                    <div class="fee-summary-label">Pending</div>
+                </div>
+            `;
+        }
+    } else {
+        // No fee structure found for this student's branch/semester — show a helpful message
+        if (summaryContainer) {
+            summaryContainer.innerHTML = '<p class="muted">Fee structure not available for your branch/semester.</p>';
+        }
     }
 }
 
@@ -1283,13 +1290,19 @@ function showProcessPaymentModal() {
             <div class="modal-content">
                 <h3>Process Payment</h3>
                 <div class="form-row">
-                    <label>Student (type to search by ID or name)</label>
-                    <input id="proc-student-input" list="proc-student-datalist" placeholder="Type student name..." />
+                    <label>Student (type roll number or name)</label>
+                    <input id="proc-student-input" list="proc-student-datalist" placeholder="Type roll number or name..." />
                     <datalist id="proc-student-datalist"></datalist>
                 </div>
                 <div class="form-row">
                     <label>Fee Type</label>
-                    <input id="proc-fee-type" type="text" placeholder="Fee Type (e.g. Semester Fee)" />
+                    <select id="proc-fee-type" class="form-control">
+                        <option value="">Select Fee Type</option>
+                        <option value="Semester Fee">Semester Fee</option>
+                        <option value="Partial Payment">Partial Payment</option>
+                        <option value="Exam Fee">Exam Fee</option>
+                        <option value="Hostel Fee">Hostel Fee</option>
+                    </select>
                 </div>
                 <div class="form-row">
                     <label>Amount (₹)</label>
@@ -1314,15 +1327,23 @@ function showProcessPaymentModal() {
         document.head.appendChild(style);
     }
 
-    // Populate searchable datalist for students
+    // Populate searchable datalist for students (include roll numbers so admins
+    // can search by roll number as well as by ID or name)
     const studentInput = document.getElementById('proc-student-input');
     const studentDatalist = document.getElementById('proc-student-datalist');
     studentDatalist.innerHTML = '';
     students.forEach(s => {
-        const opt = document.createElement('option');
-        // value shown to user; include id and name for clarity
-        opt.value = `${s.id} - ${s.name}`;
-        studentDatalist.appendChild(opt);
+        // If a roll number exists, show a single "ROLL - Name" suggestion so the
+        // user can search by roll; otherwise fall back to name-only suggestion.
+        if (s.rollNumber) {
+            const optRoll = document.createElement('option');
+            optRoll.value = `${s.rollNumber} - ${s.name}`;
+            studentDatalist.appendChild(optRoll);
+        } else {
+            const optName = document.createElement('option');
+            optName.value = s.name;
+            studentDatalist.appendChild(optName);
+        }
     });
     studentInput.value = '';
 
@@ -1338,30 +1359,31 @@ function showProcessPaymentModal() {
         const feeType = document.getElementById('proc-fee-type').value.trim();
         const amount = parseFloat(document.getElementById('proc-amount').value);
 
-        // Resolve student id from input which may contain "ID - Name" or just name/id
+        // Resolve student id from input which may contain "ROLL - Name" or just name/roll.
+        // This intentionally does NOT match by internal student ID so admins can search
+        // by roll number or by name only.
         const resolveStudentId = (input) => {
             if (!input) return null;
-            // If input contains " - " and starts with an ID like ST001, extract it
+            // If input contains " - ", treat the left side as roll number
             if (input.includes(' - ')) {
                 const parts = input.split(' - ');
-                const maybeId = parts[0].trim();
-                if (students.find(s => s.id === maybeId)) return maybeId;
+                const maybeRoll = parts[0].trim();
+                const byRollMaybe = students.find(s => s.rollNumber && s.rollNumber === maybeRoll);
+                if (byRollMaybe) return byRollMaybe.id;
             }
 
-            // Exact ID match
-            const byId = students.find(s => s.id.toLowerCase() === input.toLowerCase());
-            if (byId) return byId.id;
+            const lowered = input.toLowerCase();
 
-            // Match by rollNumber
-            const byRoll = students.find(s => s.rollNumber && s.rollNumber.toLowerCase() === input.toLowerCase());
+            // Match by rollNumber exact
+            const byRoll = students.find(s => s.rollNumber && s.rollNumber.toLowerCase() === lowered);
             if (byRoll) return byRoll.id;
 
             // Match by exact name (case-insensitive)
-            const byNameExact = students.find(s => s.name.toLowerCase() === input.toLowerCase());
+            const byNameExact = students.find(s => s.name && s.name.toLowerCase() === lowered);
             if (byNameExact) return byNameExact.id;
 
             // Partial name match (first match)
-            const byNamePartial = students.find(s => s.name.toLowerCase().includes(input.toLowerCase()));
+            const byNamePartial = students.find(s => s.name && s.name.toLowerCase().includes(lowered));
             if (byNamePartial) return byNamePartial.id;
 
             // No match
