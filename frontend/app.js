@@ -143,10 +143,10 @@ function initializeData() {
     
     // Initialize sample users
     users = [
-        { id: 'U001', name: 'Admin User', email: 'admin@college.edu', role: 'admin', password: 'admin123' },
-        { id: 'U002', name: 'Rahul Kumar', email: 'rahul.kumar@college.edu', role: 'student', password: 'student123' },
-        { id: 'U003', name: 'Priya Sharma', email: 'priya.sharma@college.edu', role: 'student', password: 'student123' },
-        { id: 'U004', name: 'Arjun Patel', email: 'arjun.patel@college.edu', role: 'student', password: 'student123' }
+        { id: 'U001', name: 'Admin User', email: 'admin@gmail.com', role: 'admin', password: 'admin123' },
+        { id: 'U002', name: 'Rahul Kumar', email: 'rahul.kumar@gmail.com', role: 'student', password: 'student123' },
+        { id: 'U003', name: 'Priya Sharma', email: 'priya.sharma@gmail.com', role: 'student', password: 'student123' },
+        { id: 'U004', name: 'Arjun Patel', email: 'arjun.patel@gmail.com', role: 'student', password: 'student123' }
     ];
     
     // Populate branch filters
