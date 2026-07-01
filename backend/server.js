@@ -47,6 +47,9 @@ app.use(express.json()); // To parse JSON bodies
 app.use('/api', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/fee-structures', feeStructureRoutes);
+// Backwards-compatible mounts for older clients/typos
+app.use('/api/feeStructures', feeStructureRoutes);
+app.use('/api/fee_structures', feeStructureRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reports', reportsRoutes);
 // =================== NEW CODE STARTS HERE ===================

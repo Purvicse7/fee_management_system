@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db.js'); // Correct path to go up one level to find db.js
+const { validatePassword } = require('../utils/validators');
 
 const router = express.Router();
 
@@ -12,6 +13,12 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ message: "Please provide all required fields." });
   }
   try {
+    // Validate password strength before hashing
+    const { valid, errors } = validatePassword(password);
+    if (!valid) {
+      return res.status(400).json({ message: 'Password does not meet complexity requirements', errors });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await pool.execute(
       'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',

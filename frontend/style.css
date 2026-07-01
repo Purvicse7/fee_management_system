@@ -799,6 +799,113 @@ select.form-control {
     background: var(--color-bg-1);
 }
 
+/* Student Fee Summary modal - blue theme (previously injected from JS) */
+#admin-student-fee-summary-modal {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+#admin-student-fee-summary-modal .modal-content {
+  background: linear-gradient(180deg, #0d6efd 0%, #0b5ed7 100%);
+  color: #fff;
+  padding: 20px;
+  width: 420px;
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(11, 94, 215, 0.28);
+}
+#admin-student-fee-summary-modal h3 { margin: 0 0 12px 0; color: #fff; }
+#admin-student-fee-summary-modal .form-row { display: flex; flex-direction: column; margin: 8px 0; }
+#admin-student-fee-summary-modal .form-row label { font-size: 0.95em; margin-bottom: 6px; color: #e6f0ff; }
+#admin-student-fee-summary-modal .form-row input,
+#admin-student-fee-summary-modal .form-row input::placeholder { color: #0b2140; }
+#admin-student-fee-summary-modal #summary-student-input { padding: 8px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.95); color: #0b2140; }
+#admin-student-fee-summary-modal .fee-summary-item { margin: 8px 0; color: #fff; }
+#admin-student-fee-summary-modal .fee-summary-item strong { color: #eaf4ff; }
+#admin-student-fee-summary-modal .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+#admin-student-fee-summary-modal .btn { padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.18); background: transparent; color: #fff; cursor: pointer; }
+#admin-student-fee-summary-modal .btn--primary { background: #fff; color: #0b5ed7; border-color: transparent; }
+
+/* Overdue highlighting for fee structures */
+.fee-overdue { border: 1px solid rgba(220,53,69,0.12); box-shadow: 0 6px 18px rgba(220,53,69,0.06); }
+.fee-overdue .fee-structure-header h3 { position: relative; }
+.fee-overdue .due-label { color: #dc3545; font-weight: 600; margin-left: 8px; }
+.fee-item .due-text { color: #dc3545; font-size: 0.9em; margin-top: 4px; }
+
+/* Overdue badge */
+.due-label { background: rgba(220,53,69,0.08); color: #dc3545; padding: 4px 8px; border-radius: 6px; margin-left:8px; font-size:0.85em; }
+
+/* Edit Fee Structure modal - blue theme */
+#edit-fee-structure-modal {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+#edit-fee-structure-modal .modal-content {
+  background: linear-gradient(180deg, #0d6efd 0%, #365483 100%);
+  color: #fff;
+  padding: 20px;
+  width: 520px;
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(11, 94, 215, 0.28);
+}
+#edit-fee-structure-modal h3 { margin: 0 0 12px 0; color: #fff; }
+#edit-fee-structure-modal .form-row { display: flex; flex-direction: column; margin: 8px 0; }
+#edit-fee-structure-modal .form-row label { font-size: 0.95em; margin-bottom: 6px; color: #e6f0ff; }
+#edit-fee-structure-modal .form-row input[type="text"],
+#edit-fee-structure-modal .form-row input[type="number"],
+#edit-fee-structure-modal .form-row input[type="date"],
+#edit-fee-structure-modal .form-row select {
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.95);
+  color: #0b2140;
+}
+#edit-fee-structure-modal .fee-summary-item { color: #fff; }
+#edit-fee-structure-modal .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+#edit-fee-structure-modal .btn { padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.18); background: transparent; color: #fff; cursor: pointer; }
+#edit-fee-structure-modal .btn--primary { background: #fff; color: #0b5ed7; border-color: transparent; }
+
+/* Edit student modal moved from inline JS */
+#edit-student-modal { position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:9999; }
+#edit-student-modal .modal-content { background:#fff; padding:18px; width:480px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+#edit-student-modal .form-row { display:flex; flex-direction:column; margin:8px 0; }
+#edit-student-modal .form-row label { font-size:0.9em; margin-bottom:6px; color:#333; }
+#edit-student-modal .form-row input[type=text], #edit-student-modal .form-row input[type=email], #edit-student-modal .form-row input[type=number] { padding:8px 10px; border:1px solid #ddd; border-radius:4px; }
+#edit-student-modal .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+#edit-student-modal .btn--primary { background:#1FB8CD; color:#fff; border-color:transparent; }
+
+/* Admin process payment modal moved from inline JS */
+#admin-process-payment-modal { position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999; }
+#admin-process-payment-modal .modal-content { background:#fff; padding:20px; width:360px; border-radius:6px; }
+#admin-process-payment-modal .form-row { margin:8px 0; display:flex; flex-direction:column; }
+#admin-process-payment-modal .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+
+/* Add Fee Structure modal moved from inline JS */
+#add-fee-structure-modal { position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:9999; }
+#add-fee-structure-modal .modal-content { background:#fff; padding:18px; width:420px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+#add-fee-structure-modal h3 { margin:0 0 12px 0; }
+#add-fee-structure-modal .form-row { display:flex; flex-direction:column; margin:8px 0; }
+#add-fee-structure-modal .form-row label { font-size:0.9em; margin-bottom:6px; color:#333; }
+#add-fee-structure-modal .form-row input { padding:8px 10px; border:1px solid #ddd; border-radius:4px; }
+#add-fee-structure-modal .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+#add-fee-structure-modal .btn { padding:8px 12px; border-radius:4px; border:1px solid #ccc; background:#f5f5f5; cursor:pointer; }
+#add-fee-structure-modal .btn--primary { background:#1FB8CD; color:#fff; border-color:transparent; }
+
 .features-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

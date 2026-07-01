@@ -12,7 +12,7 @@ const sampleData = {
         {
             id: "ST001",
             name: "Rahul Kumar",
-            email: "rahul.kumar@gmail.com",
+            email: "rahulkumar@gmail.com",
             rollNumber: "4YG23CS029",
             branch: "Computer Science Engineering",
             semester: 5,
@@ -24,7 +24,7 @@ const sampleData = {
         {
             id: "ST002",
             name: "Priya Sharma",
-            email: "priya.sharma@gmail.com",
+            email: "priyasharma@gmail.com",
             rollNumber: "4YG24EC019",
             branch: "Electronics & Communication",
             semester: 3,
@@ -36,7 +36,7 @@ const sampleData = {
         {
             id: "ST003",
             name: "Arjun Patel",
-            email: "arjun.patel@gmail.com",
+            email: "arjunpatel@gmail.com",
             rollNumber: "4YG22ME001",
             branch: "Mechanical Engineering",
             semester: 7,
@@ -55,6 +55,18 @@ const sampleData = {
             year: 3,
             contactNumber: "9876543299",
             address: "bangalore",
+            hostelResident: false
+        },
+        {
+            id: "ST005",
+            name: "Surya Raj",
+            email: "suryaraj@gmail.com",
+            rollNumber: "4YG22CE080",
+            branch: "Civil Engineering",
+            semester: 7,
+            year: 3,
+            contactNumber: "9876543300",
+            address: "Hassan",
             hostelResident: false
         }
     ],
@@ -88,13 +100,23 @@ const sampleData = {
             hostelFee: 25000,
             examFee: 3000,
             developmentFee: 10000
+        },
+         {
+            branch: "Civil Engineering",
+            semester: 7,
+            tuitionFee: 65000,
+            labFee: 10000,
+            libraryFee: 5000,
+            hostelFee: 25000,
+            examFee: 3000,
+            developmentFee: 10000
         }
     ],
     samplePayments: [
         {
             id: "PAY001",
             studentId: "ST001",
-            amount: 133000,
+            amount: 105000,
             feeType: "Semester Fee",
             paymentDate: "2024-01-15",
             transactionId: "TXN123456789",
@@ -535,6 +557,7 @@ function renderStudentsTable() {
             <td>${student.contactNumber}</td>
             <td>
                 <div class="table-actions">
+                    <button class="btn btn--outline btn--sm" onclick="showStudentFeeSummaryModal('${student.id}')">Fee Summary</button>
                     <button class="btn btn--outline btn--sm" onclick="editStudent('${student.id}')">Edit</button>
                     <button class="btn btn--outline btn--sm" onclick="deleteStudent('${student.id}')">Delete</button>
                 </div>
@@ -546,16 +569,35 @@ function renderStudentsTable() {
 function renderFeeStructures() {
     const container = document.getElementById('fee-structures-grid');
     
-    container.innerHTML = feeStructures.map(structure => {
-        const total = structure.tuitionFee + structure.labFee + structure.libraryFee + 
-                     structure.hostelFee + structure.examFee + structure.developmentFee;
-        
+    container.innerHTML = feeStructures.map((structure, idx) => {
+        // Exclude hostel fee from the fee-structure "total" since hostel is optional
+        const total = (structure.tuitionFee || 0) + (structure.labFee || 0) + (structure.libraryFee || 0) +
+                          (structure.developmentFee || 0); // Exclude optional fees (hostel, exam) from the displayed core total
+        // compute overdue status for any of the optional/core parts
+        const now = new Date();
+        const semDue = structure.semesterDueDate ? new Date(structure.semesterDueDate) : null;
+        const examDue = structure.examDueDate ? new Date(structure.examDueDate) : null;
+        const hostelDue = structure.hostelDueDate ? new Date(structure.hostelDueDate) : null;
+        const isOverdue = (d => d && !isNaN(d.getTime()) && d < now)(semDue) || (d => d && !isNaN(d.getTime()) && d < now)(examDue) || (d => d && !isNaN(d.getTime()) && d < now)(hostelDue);
+
+        // find nearest overdue date (if any)
+        const dueDates = [];
+        if (semDue) dueDates.push({ type: 'Semester', date: semDue });
+        if (examDue) dueDates.push({ type: 'Exam', date: examDue });
+        if (hostelDue) dueDates.push({ type: 'Hostel', date: hostelDue });
+        let nearestOverdueText = '';
+        if (isOverdue) {
+            const overdueOn = dueDates.filter(d => d.date < now).sort((a,b) => a.date - b.date)[0];
+            if (overdueOn) nearestOverdueText = `${overdueOn.type} overdue ${formatDateISO(overdueOn.date)}`;
+        }
+
         return `
-            <div class="fee-structure-card">
+            <div class="fee-structure-card ${isOverdue ? 'fee-overdue' : ''}">
                 <div class="fee-structure-header">
-                    <h3>${structure.branch}</h3>
+                    <h3>${structure.branch}${isOverdue ? `<span class="due-label">Overdue</span>` : ''}</h3>
                     <div class="semester-info">Semester ${structure.semester}</div>
                 </div>
+                ${isOverdue && nearestOverdueText ? `<div style="padding:6px 12px; color:#dc3545; font-weight:600">${nearestOverdueText}</div>` : ''}
                 <div class="fee-breakdown">
                     <div class="fee-item">
                         <span class="fee-label">Tuition Fee</span>
@@ -570,25 +612,139 @@ function renderFeeStructures() {
                         <span class="fee-amount">₹${structure.libraryFee.toLocaleString()}</span>
                     </div>
                     <div class="fee-item">
-                        <span class="fee-label">Hostel Fee</span>
-                        <span class="fee-amount">₹${structure.hostelFee.toLocaleString()}</span>
+                        <span class="fee-label">Hostel Fee <small>(Optional)</small></span>
+                        <span class="fee-amount">₹${(structure.hostelFee||0).toLocaleString()}</span>
                     </div>
                     <div class="fee-item">
-                        <span class="fee-label">Exam Fee</span>
-                        <span class="fee-amount">₹${structure.examFee.toLocaleString()}</span>
-                    </div>
+                            <span class="fee-label">Exam Fee <small>(during exam)</small></span>
+                            <span class="fee-amount">₹${(structure.examFee||0).toLocaleString()}</span>
+                        </div>
                     <div class="fee-item">
                         <span class="fee-label">Development Fee</span>
                         <span class="fee-amount">₹${structure.developmentFee.toLocaleString()}</span>
                     </div>
                     <div class="fee-item fee-total">
-                        <span class="fee-label">Total Amount</span>
+                        <span class="fee-label">Total (excluding optional hostel)</span>
                         <span class="fee-amount">₹${total.toLocaleString()}</span>
                     </div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px">
+                    <button class="btn btn--outline btn--sm" onclick="showEditFeeStructureModal(${idx})">Edit</button>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+// Show an edit modal for a fee structure at index
+function showEditFeeStructureModal(index) {
+    const structure = feeStructures[index];
+    if (!structure) { showNotification('Fee structure not found', 'error'); return; }
+
+    const modalId = 'edit-fee-structure-modal';
+    let modal = document.getElementById(modalId);
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content modal--fee-edit">
+                <h3>Edit Fee Structure</h3>
+                <div class="form-row"><label>Branch</label><input id="edit-fee-branch" type="text" /></div>
+                <div class="form-row"><label>Semester</label><input id="edit-fee-semester" type="number" min="1" /></div>
+                <div class="form-row"><label>Tuition Fee (₹)</label><input id="edit-fee-tuition" type="number" min="0" /></div>
+                <div class="form-row"><label>Lab Fee (₹)</label><input id="edit-fee-lab" type="number" min="0" /></div>
+                <div class="form-row"><label>Library Fee (₹)</label><input id="edit-fee-library" type="number" min="0" /></div>
+                <div class="form-row"><label>Hostel Fee (Optional) (₹)</label><input id="edit-fee-hostel" type="number" min="0" /></div>
+                <div class="form-row"><label>Exam Fee (Optional) (₹)</label><input id="edit-fee-exam" type="number" min="0" /></div>
+                <div class="form-row"><label>Semester Due Date</label><input id="edit-fee-semester-due" type="date" /></div>
+                <div class="form-row"><label>Exam Due Date</label><input id="edit-fee-exam-due" type="date" /></div>
+                <div class="form-row"><label>Hostel Due Date</label><input id="edit-fee-hostel-due" type="date" /></div>
+                <div class="form-row"><label><input id="edit-fee-auto-notify" type="checkbox" /> Auto-notify when overdue (email/SMS placeholder)</label></div>
+                <div class="form-row"><label>Development Fee (₹)</label><input id="edit-fee-development" type="number" min="0" /></div>
+                <div class="modal-actions"><button id="edit-fee-cancel" class="btn">Cancel</button><button id="edit-fee-save" class="btn btn--primary">Save</button></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('#edit-fee-cancel').addEventListener('click', () => closeModal(modalId));
+    modal.querySelector('#edit-fee-save').addEventListener('click', async () => {
+            // read values and save back
+            const branch = document.getElementById('edit-fee-branch').value.trim();
+            const sem = parseInt(document.getElementById('edit-fee-semester').value, 10);
+            const tuition = parseFloat(document.getElementById('edit-fee-tuition').value) || 0;
+            const lab = parseFloat(document.getElementById('edit-fee-lab').value) || 0;
+            const lib = parseFloat(document.getElementById('edit-fee-library').value) || 0;
+            const hostel = parseFloat(document.getElementById('edit-fee-hostel').value) || 0;
+            const exam = parseFloat(document.getElementById('edit-fee-exam').value) || 0;
+            const semDue = document.getElementById('edit-fee-semester-due').value || null;
+            const examDue = document.getElementById('edit-fee-exam-due').value || null;
+            const hostelDue = document.getElementById('edit-fee-hostel-due').value || null;
+            const dev = parseFloat(document.getElementById('edit-fee-development').value) || 0;
+
+            if (!branch) { showNotification('Branch required', 'error'); return; }
+            if (!sem || isNaN(sem)) { showNotification('Valid semester required', 'error'); return; }
+
+            // update
+            structure.branch = branch;
+            structure.semester = sem;
+            structure.tuitionFee = tuition;
+            structure.labFee = lab;
+            structure.libraryFee = lib;
+            structure.hostelFee = hostel;
+            structure.examFee = exam;
+            structure.developmentFee = dev;
+            structure.semesterDueDate = semDue;
+            structure.examDueDate = examDue;
+            structure.hostelDueDate = hostelDue;
+            structure.autoNotify = !!document.getElementById('edit-fee-auto-notify').checked;
+
+            // attempt to persist to backend if available
+            const token = localStorage.getItem('authToken');
+            try {
+                const resp = await fetch(`http://localhost:3000/api/fee-structures/${index}`, {
+                    method: 'PUT',
+                    headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { 'Authorization': `Bearer ${token}` } : {}),
+                    body: JSON.stringify(structure)
+                });
+                if (!resp.ok) {
+                    let errMsg = 'Server error while updating fee structure.';
+                    try { const body = await resp.json(); if (body && body.message) errMsg = body.message; } catch (e) {}
+                    showNotification(`Updated locally. ${errMsg}`, 'error');
+                }
+            } catch (err) {
+                showNotification('Updated locally. Could not reach backend: ' + err.message, 'error');
+            }
+
+            closeModal(modalId);
+            renderFeeStructures();
+            showNotification('Fee structure updated', 'success');
+            // If student fee summary modal is open, refresh its display so due dates update
+            const summaryModal = document.getElementById('admin-student-fee-summary-modal');
+            if (summaryModal && !summaryModal.classList.contains('hidden')) {
+                const input = summaryModal.querySelector('#summary-student-input');
+                if (input && summaryModal._renderSummaryFor) summaryModal._renderSummaryFor(input.value);
+            }
+        });
+    }
+
+    // prefill
+    document.getElementById('edit-fee-branch').value = structure.branch || '';
+    document.getElementById('edit-fee-semester').value = structure.semester || '';
+    document.getElementById('edit-fee-tuition').value = structure.tuitionFee || 0;
+    document.getElementById('edit-fee-lab').value = structure.labFee || 0;
+    document.getElementById('edit-fee-library').value = structure.libraryFee || 0;
+    document.getElementById('edit-fee-hostel').value = structure.hostelFee || 0;
+    document.getElementById('edit-fee-exam').value = structure.examFee || 0;
+    document.getElementById('edit-fee-development').value = structure.developmentFee || 0;
+    document.getElementById('edit-fee-semester-due').value = structure.semesterDueDate || '';
+    document.getElementById('edit-fee-exam-due').value = structure.examDueDate || '';
+    document.getElementById('edit-fee-hostel-due').value = structure.hostelDueDate || '';
+    // ensure auto-notify checkbox exists and is set
+    const editAuto = document.getElementById('edit-fee-auto-notify');
+    if (editAuto) editAuto.checked = !!structure.autoNotify;
+
+    showModal(modalId);
 }
 
 function renderPaymentsTable() {
@@ -694,11 +850,15 @@ function renderStudentFeeDetails() {
     const feeStructure = feeStructures.find(f => f.branch === student.branch && f.semester === student.semester);
     if (!feeStructure) return;
     
-    const totalFee = feeStructure.tuitionFee + feeStructure.labFee + feeStructure.libraryFee + 
-                    (student.hostelResident ? feeStructure.hostelFee : 0) + 
-                    feeStructure.examFee + feeStructure.developmentFee;
+    // Compute core total excluding optional exam and optional hostel (hostel added per-student below)
+    const totalFee = (feeStructure.tuitionFee || 0) + (feeStructure.labFee || 0) + (feeStructure.libraryFee || 0) + (feeStructure.developmentFee || 0);
     
     const container = document.getElementById('fee-breakdown');
+    // compute due dates (use fee structure fields if present)
+    const semDue = computeDueDate(feeStructure, 'semester');
+    const examDue = computeDueDate(feeStructure, 'exam');
+    const hostelDue = computeDueDate(feeStructure, 'hostel');
+
     container.innerHTML = `
         <h3>Fee Structure - Semester ${student.semester}</h3>
         <div class="fee-breakdown">
@@ -716,21 +876,24 @@ function renderStudentFeeDetails() {
             </div>
             ${student.hostelResident ? `
                 <div class="fee-item">
-                    <span class="fee-label">Hostel Fee</span>
+                    <span class="fee-label">Hostel Fee <small>(Optional)</small></span>
                     <span class="fee-amount">₹${feeStructure.hostelFee.toLocaleString()}</span>
+                    <div style="font-size:0.9em;color:var(--color-text-secondary); margin-top:4px">Due: ${hostelDue}</div>
                 </div>
             ` : ''}
             <div class="fee-item">
-                <span class="fee-label">Exam Fee</span>
+                <span class="fee-label">Exam Fee <small>(Optional)</small></span>
                 <span class="fee-amount">₹${feeStructure.examFee.toLocaleString()}</span>
+                <div style="font-size:0.9em;color:var(--color-text-secondary); margin-top:4px">Due: ${examDue}</div>
             </div>
             <div class="fee-item">
                 <span class="fee-label">Development Fee</span>
                 <span class="fee-amount">₹${feeStructure.developmentFee.toLocaleString()}</span>
             </div>
             <div class="fee-item fee-total">
-                <span class="fee-label">Total Amount</span>
+                <span class="fee-label">Total (excluding optional exam & hostel)</span>
                 <span class="fee-amount">₹${totalFee.toLocaleString()}</span>
+                <div style="font-size:0.9em;color:var(--color-text-secondary); margin-top:6px">Semester Due Date: ${semDue}</div>
             </div>
         </div>
     `;
@@ -755,6 +918,7 @@ function renderPaymentHistory() {
                 <div class="payment-meta">
                     Transaction ID: ${payment.transactionId} • 
                     Date: ${new Date(payment.paymentDate).toLocaleDateString()} • 
+                    Method: ${payment.paymentMethod || 'Not specified'} • 
                     Status: ${payment.status}
                 </div>
             </div>
@@ -862,12 +1026,19 @@ function handleStudentPayment(e) {
     showModal('payment-gateway-modal');
 }
 
+// Update payment form fields based on selected payment method
 function processPayment() {
     const student = students.find(s => s.email === currentUser.email);
     if (!student) return;
     
     const paymentType = document.getElementById('payment-type').value;
     const amount = parseFloat(document.getElementById('payment-amount').value);
+    const upiId = document.getElementById('upi-id').value.trim();
+    
+    if (!upiId) {
+        showNotification('Please enter UPI ID!', 'error');
+        return;
+    }
     
     // Generate transaction ID
     const transactionId = 'TXN' + Date.now();
@@ -877,6 +1048,7 @@ function processPayment() {
         studentId: student.id,
         amount: amount,
         feeType: paymentType,
+        paymentMethod: 'UPI',
         paymentDate: new Date().toISOString().split('T')[0],
         transactionId: transactionId,
         status: 'Completed'
@@ -884,10 +1056,30 @@ function processPayment() {
     
     payments.push(newPayment);
     
+    // Send payment to backend database
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        fetch('http://localhost:3000/api/payments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                studentId: student.id,
+                feeStructureId: 1, // You may need to fetch this based on payment type
+                amount: amount,
+                paymentMethod: 'UPI',
+                transactionId: transactionId
+            })
+        }).catch(error => console.error('Error saving payment to database:', error));
+    }
+    
     closeModal('payment-gateway-modal');
     document.getElementById('student-payment-form').reset();
+    document.getElementById('upi-id').value = '';
     
-    showNotification(`Payment of ₹${amount.toLocaleString()} completed successfully! Transaction ID: ${transactionId}`, 'success');
+    showNotification(`Payment of ₹${amount.toLocaleString()} completed successfully via UPI! Transaction ID: ${transactionId}`, 'success');
     
     // Refresh student dashboard
     renderStudentDetails();
@@ -965,28 +1157,66 @@ function initializeRevenueChart() {
 
 function initializeBranchRevenueChart() {
     const ctx = document.getElementById('branch-revenue-chart');
-    if (!ctx) return;
+    if (!ctx) {
+        console.warn('branch-revenue-chart canvas not found');
+        return;
+    }
     
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['CSE', 'ECE', 'Mechanical', 'Civil', 'Electrical'],
-            datasets: [{
-                label: 'Revenue (₹)',
-                data: [500000, 450000, 400000, 350000, 300000],
-                backgroundColor: ['#1FB8CD', '#FFC185', '#B4413C', '#ECEBD5', '#5D878F']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+    if (!payments || payments.length === 0) {
+        console.warn('No payment data available for chart');
+        ctx.style.display = 'block';
+        return;
+    }
+    
+    // Calculate revenue per branch from payments
+    const branchRevenue = {};
+    
+    payments.forEach(payment => {
+        const student = students.find(s => s.id === payment.studentId);
+        if (student) {
+            if (!branchRevenue[student.branch]) {
+                branchRevenue[student.branch] = 0;
             }
+            branchRevenue[student.branch] += payment.amount;
         }
     });
+    
+    // Get branches from data (excluding Electrical)
+    const branches = ['Computer Science Engineering', 'Electronics & Communication', 'Mechanical Engineering', 'Civil Engineering'];
+    const labels = ['CSE', 'ECE', 'Mechanical', 'Civil'];
+    const colors = ['#1FB8CD', '#FFC185', '#B4413C', '#ECEBD5'];
+    
+    // Get corresponding revenue values
+    const data = branches.map(branch => branchRevenue[branch] || 0);
+    
+    console.log('Branch Revenue Data:', branchRevenue);
+    console.log('Chart Data:', data);
+    
+    try {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue (₹)',
+                    data: data,
+                    backgroundColor: colors
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        console.log('Branch Revenue Chart initialized successfully');
+    } catch (error) {
+        console.error('Error initializing Branch Revenue Chart:', error);
+    }
 }
 
 function initializePaymentStatusChart() {
@@ -1010,6 +1240,31 @@ function initializePaymentStatusChart() {
 }
 
 // Utility Functions
+// Format an ISO date or Date into DD-MM-YYYY
+function formatDateISO(d) {
+    if (!d) return '—';
+    const date = d instanceof Date ? d : new Date(d);
+    if (isNaN(date.getTime())) return '—';
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+}
+
+// Compute a due date for a fee type. Priority: feeStructure.<type>DueDate -> default offsets
+function computeDueDate(fs, type) {
+    // If fee structure provides explicit due dates (ISO strings), use them
+    if (fs) {
+        if (type === 'semester' && fs.semesterDueDate) return formatDateISO(fs.semesterDueDate);
+        if (type === 'exam' && fs.examDueDate) return formatDateISO(fs.examDueDate);
+        if (type === 'hostel' && fs.hostelDueDate) return formatDateISO(fs.hostelDueDate);
+    }
+
+    // Defaults: semester & hostel -> 30 days from now, exam -> 60 days from now
+    const now = Date.now();
+    const days = type === 'exam' ? 60 : 30;
+    return formatDateISO(new Date(now + days * 24 * 60 * 60 * 1000));
+}
 function editStudent(studentId) {
     const modalId = 'edit-student-modal';
     let modal = document.getElementById(modalId);
@@ -1080,18 +1335,7 @@ function editStudent(studentId) {
             }
         } catch (e) {}
 
-        const style = document.createElement('style');
-        style.id = 'edit-student-styles';
-        style.textContent = `
-            #${modalId} { position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:9999; }
-            #${modalId} .modal-content { background:#fff; padding:18px; width:480px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
-            #${modalId} .form-row { display:flex; flex-direction:column; margin:8px 0; }
-            #${modalId} .form-row label { font-size:0.9em; margin-bottom:6px; color:#333; }
-            #${modalId} .form-row input[type=text], #${modalId} .form-row input[type=email], #${modalId} .form-row input[type=number] { padding:8px 10px; border:1px solid #ddd; border-radius:4px; }
-            #${modalId} .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
-            #${modalId} .btn--primary { background:#1FB8CD; color:#fff; border-color:transparent; }
-        `;
-        document.head.appendChild(style);
+        // Styles for this modal moved to frontend/style.css (scoped by #edit-student-modal)
 
         // Cancel handler - attach with addEventListener and stop propagation
         const cancelBtn = modal.querySelector('#edit-cancel');
@@ -1257,6 +1501,7 @@ function viewPaymentReceipt(paymentId) {
                 <div class="row"><div>Payment ID:</div><div>${payment.id}</div></div>
                 <div class="row"><div>Student:</div><div>${student.name} (${student.rollNumber})</div></div>
                 <div class="row"><div>Fee Type:</div><div>${payment.feeType}</div></div>
+                <div class="row"><div>Payment Method:</div><div>${payment.paymentMethod || 'Not specified'}</div></div>
                 <div class="row"><div>Date:</div><div>${new Date(payment.paymentDate).toLocaleDateString()}</div></div>
                 <div class="row total"><div>Amount Paid:</div><div>₹${payment.amount.toLocaleString()}</div></div>
                 <div style="margin-top:18px; font-size:0.9em; color:#666">This is a system generated receipt.</div>
@@ -1316,15 +1561,7 @@ function showProcessPaymentModal() {
         `;
         document.body.appendChild(modal);
 
-        // Basic styles (only added once)
-        const style = document.createElement('style');
-        style.textContent = `
-            .modal { position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999; }
-            .modal-content { background:#fff; padding:20px; width:360px; border-radius:6px; }
-            .form-row { margin:8px 0; display:flex; flex-direction:column; }
-            .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
-        `;
-        document.head.appendChild(style);
+        // Styles for this modal moved to frontend/style.css (scoped by #admin-process-payment-modal)
     }
 
     // Populate searchable datalist for students (include roll numbers so admins
@@ -1347,11 +1584,18 @@ function showProcessPaymentModal() {
     });
     studentInput.value = '';
 
-    // Show modal
-    modal.classList.remove('hidden');
+    // Show modal using shared helper so inline display is set correctly
+    showModal(modalId);
 
     document.getElementById('proc-cancel').onclick = () => {
-        modal.classList.add('hidden');
+        // Use shared helper to ensure both class and inline styles are cleared
+        closeModal(modalId);
+        // clear inputs for next time
+        try {
+            document.getElementById('proc-student-input').value = '';
+            document.getElementById('proc-fee-type').value = '';
+            document.getElementById('proc-amount').value = '';
+        } catch (e) {}
     };
 
     document.getElementById('proc-submit').onclick = () => {
@@ -1414,7 +1658,14 @@ function showProcessPaymentModal() {
         };
 
         payments.push(newPayment);
-        modal.classList.add('hidden');
+        // Close using shared helper which also clears inline display styles
+        closeModal(modalId);
+        // Clear inputs
+        try {
+            studentInput.value = '';
+            document.getElementById('proc-fee-type').value = '';
+            document.getElementById('proc-amount').value = '';
+        } catch (e) {}
         renderPaymentsTable();
         updateAdminStats();
         showNotification(`Processed payment ₹${amount.toLocaleString()} (ID: ${transactionId})`, 'success');
@@ -1453,12 +1704,27 @@ function showAddFeeStructureModal() {
                     <input id="fee-library" type="number" min="0" />
                 </div>
                 <div class="form-row">
-                    <label>Hostel Fee (₹)</label>
+                    <label>Hostel Fee (Optional) (₹)</label>
                     <input id="fee-hostel" type="number" min="0" />
                 </div>
                 <div class="form-row">
-                    <label>Exam Fee (₹)</label>
+                    <label>Exam Fee (Optional) (₹)</label>
                     <input id="fee-exam" type="number" min="0" />
+                </div>
+                <div class="form-row">
+                    <label>Semester Due Date</label>
+                    <input id="fee-semester-due" type="date" />
+                </div>
+                <div class="form-row">
+                    <label>Exam Due Date</label>
+                    <input id="fee-exam-due" type="date" />
+                </div>
+                <div class="form-row">
+                    <label>Hostel Due Date</label>
+                    <input id="fee-hostel-due" type="date" />
+                </div>
+                <div class="form-row">
+                    <label><input id="fee-auto-notify" type="checkbox" /> Auto-notify when overdue (email/SMS placeholder)</label>
                 </div>
                 <div class="form-row">
                     <label>Development Fee (₹)</label>
@@ -1473,21 +1739,7 @@ function showAddFeeStructureModal() {
 
         document.body.appendChild(modal);
 
-        // Inject styles (scoped minimal styles)
-        const style = document.createElement('style');
-        style.id = 'fee-modal-styles';
-        style.textContent = `
-            #${modalId} { position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:9999; }
-            #${modalId} .modal-content { background:#fff; padding:18px; width:420px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
-            #${modalId} h3 { margin:0 0 12px 0; }
-            #${modalId} .form-row { display:flex; flex-direction:column; margin:8px 0; }
-            #${modalId} .form-row label { font-size:0.9em; margin-bottom:6px; color:#333; }
-            #${modalId} .form-row input { padding:8px 10px; border:1px solid #ddd; border-radius:4px; }
-            #${modalId} .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
-            #${modalId} .btn { padding:8px 12px; border-radius:4px; border:1px solid #ccc; background:#f5f5f5; cursor:pointer; }
-            #${modalId} .btn--primary { background:#1FB8CD; color:#fff; border-color:transparent; }
-        `;
-        document.head.appendChild(style);
+        // Styles for this modal moved to frontend/style.css (scoped by #add-fee-structure-modal)
 
         // Wire up buttons
         document.getElementById('fee-cancel').addEventListener('click', () => {
@@ -1506,20 +1758,27 @@ function showAddFeeStructureModal() {
             const libraryFee = parseFloat(document.getElementById('fee-library').value) || 0;
             const hostelFee = parseFloat(document.getElementById('fee-hostel').value) || 0;
             const examFee = parseFloat(document.getElementById('fee-exam').value) || 0;
+            const semesterDueDate = document.getElementById('fee-semester-due').value || null;
+            const examDueDate = document.getElementById('fee-exam-due').value || null;
+            const hostelDueDate = document.getElementById('fee-hostel-due').value || null;
+            const autoNotify = !!document.getElementById('fee-auto-notify').checked;
             const developmentFee = parseFloat(document.getElementById('fee-development').value) || 0;
 
             if (!branch) { showNotification('Branch is required.', 'error'); return; }
             if (!semester || isNaN(semester) || semester < 1) { showNotification('Valid semester is required.', 'error'); return; }
 
-            const newStructure = { branch, semester, tuitionFee, labFee, libraryFee, hostelFee, examFee, developmentFee };
+            const newStructure = { branch, semester, tuitionFee, labFee, libraryFee, hostelFee, examFee, developmentFee, semesterDueDate, examDueDate, hostelDueDate, autoNotify };
 
             // Optimistically add locally
             feeStructures.push(newStructure);
             renderFeeStructures();
 
             // Prepare payload for backend: compute total amount and a description
-            const amount = tuitionFee + labFee + libraryFee + hostelFee + examFee + developmentFee;
-            const description = `Tuition:${tuitionFee}, Lab:${labFee}, Library:${libraryFee}, Hostel:${hostelFee}, Exam:${examFee}, Dev:${developmentFee}`;
+            // Hostel and Exam fees are optional and therefore excluded from the
+            // total amount sent to the server; we still include them in the
+            // description for reference.
+            const amount = tuitionFee + labFee + libraryFee + developmentFee;
+            const description = `Tuition:${tuitionFee}, Lab:${labFee}, Library:${libraryFee}, Hostel(Optional):${hostelFee}, Exam(Optional):${examFee}, Dev:${developmentFee}, SemesterDue:${semesterDueDate || ''}, ExamDue:${examDueDate || ''}, HostelDue:${hostelDueDate || ''}`;
 
             // Attempt to POST to backend if available
             const token = localStorage.getItem('authToken');
@@ -1527,7 +1786,7 @@ function showAddFeeStructureModal() {
                 const resp = await fetch('http://localhost:3000/api/fee-structures', {
                     method: 'POST',
                     headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { 'Authorization': `Bearer ${token}` } : {}),
-                    body: JSON.stringify({ branch, semester, amount, description })
+                    body: JSON.stringify({ branch, semester, amount, description, semesterDueDate, examDueDate, hostelDueDate, autoNotify })
                 });
 
                 if (resp.ok) {
@@ -1561,7 +1820,7 @@ function showAddFeeStructureModal() {
     }, 50);
 
     function clearFeeModalInputs() {
-        ['fee-branch','fee-semester','fee-tuition','fee-lab','fee-library','fee-hostel','fee-exam','fee-development']
+        ['fee-branch','fee-semester','fee-tuition','fee-lab','fee-library','fee-hostel','fee-exam','fee-development','fee-semester-due','fee-exam-due','fee-hostel-due']
             .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     }
 }
@@ -1575,4 +1834,185 @@ function showNotification(message, type = 'info') {
     setTimeout(() => {
         notification.classList.add('hidden');
     }, 3000);
+}
+
+// Admin: show per-student fee summary (breakdown across categories)
+function showStudentFeeSummaryModal(prefillStudentId) {
+    const modalId = 'admin-student-fee-summary-modal';
+    let modal = document.getElementById(modalId);
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>Student Fee Summary</h3>
+                <div class="form-row">
+                    <label>Student (roll or name)</label>
+                    <input id="summary-student-input" list="summary-student-datalist" placeholder="Type roll or name..." />
+                    <datalist id="summary-student-datalist"></datalist>
+                </div>
+                <div id="summary-result" style="margin-top:12px;"></div>
+                <div class="modal-actions">
+                    <button id="summary-close" class="btn">Close</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // populate datalist
+        const list = modal.querySelector('#summary-student-datalist');
+        students.forEach(s => {
+            const opt = document.createElement('option');
+            if (s.rollNumber) opt.value = `${s.rollNumber} - ${s.name}`;
+            else opt.value = s.name;
+            list.appendChild(opt);
+        });
+
+        modal.querySelector('#summary-close').addEventListener('click', () => closeModal(modalId));
+
+        // when selection/input changes, render summary
+        const input = modal.querySelector('#summary-student-input');
+        const renderForInput = (value) => {
+            const raw = (value||'').trim().toLowerCase();
+            const out = document.getElementById('summary-result');
+            if (!raw) { out.innerHTML = ''; return; }
+            // resolve by roll or name
+            const student = students.find(s => (s.rollNumber && (s.rollNumber.toLowerCase() === raw || `${s.rollNumber} - ${s.name}`.toLowerCase() === raw)) || s.name.toLowerCase() === raw || s.name.toLowerCase().includes(raw));
+            if (!student) { out.innerHTML = '<p class="muted">Student not found.</p>'; return; }
+
+            // find fee structure
+            const fs = feeStructures.find(f => f.branch === student.branch && f.semester === student.semester);
+            // Define Semester Fee as the core mandatory components (tuition + lab + library + development).
+            // Hostel is optional and therefore excluded here.
+            const semesterTotal = fs ? ((fs.tuitionFee || 0) + (fs.labFee || 0) + (fs.libraryFee || 0) + (fs.developmentFee || 0)) : 0;
+            const exam = fs ? (fs.examFee || 0) : 0;
+            const hostel = (fs && student.hostelResident) ? (fs.hostelFee || 0) : 0;
+            const studentPayments = payments.filter(p => p.studentId === student.id);
+            // Partial payments are treated as installments toward the semester fee
+            const partialPaid = studentPayments.filter(p => p.feeType === 'Partial Payment').reduce((s,p) => s + p.amount, 0);
+            const semesterPaidDirect = studentPayments.filter(p => p.feeType === 'Semester Fee').reduce((s,p) => s + p.amount, 0);
+            const semesterPaid = semesterPaidDirect + partialPaid; // include partials toward semester
+            // Be tolerant when matching exam payments (some records may use 'Examination Fee' etc.)
+            const examPaid = studentPayments.filter(p => p.feeType && /exam/i.test(p.feeType)).reduce((s,p) => s + p.amount, 0);
+            const hostelPaid = studentPayments.filter(p => p.feeType === 'Hostel Fee').reduce((s,p) => s + p.amount, 0);
+
+            const semesterPending = Math.max(0, semesterTotal - semesterPaid);
+            const totalPaid = studentPayments.reduce((s,p) => s + p.amount, 0);
+
+            // compute due dates (from fee structure if available, otherwise defaults)
+            const semesterDue = computeDueDate(fs, 'semester');
+            const examDue = computeDueDate(fs, 'exam');
+            const hostelDue = computeDueDate(fs, 'hostel');
+
+            out.innerHTML = `
+                <div class="fee-summary-item"><strong>Student:</strong> ${student.name} (${student.rollNumber || '—'})</div>
+                <div class="fee-summary-item"><strong>Semester Fee:</strong> ₹${semesterTotal.toLocaleString()} (Paid: ₹${semesterPaid.toLocaleString()} • Pending: ₹${semesterPending.toLocaleString()}) <div style="font-size:0.9em; color:rgba(255,255,255,0.9); margin-top:4px">Due: ${semesterDue}</div></div>
+                <div class="fee-summary-item"><strong>Exam Fee:</strong> ₹${exam.toLocaleString()} (Paid: ₹${examPaid.toLocaleString()}) <div style="font-size:0.9em; color:rgba(255,255,255,0.9); margin-top:4px">Due: ${examDue}</div></div>
+                <div class="fee-summary-item"><strong>Hostel Fee:</strong> ₹${hostel.toLocaleString()} (Paid: ₹${hostelPaid.toLocaleString()}) <div style="font-size:0.9em; color:rgba(255,255,255,0.9); margin-top:4px">Due: ${hostelDue}</div></div>
+                <div class="fee-summary-item"><strong>Total Paid:</strong> ₹${totalPaid.toLocaleString()}</div>
+            `;
+        };
+
+        input.addEventListener('input', () => renderForInput(input.value));
+        // expose helper on modal to render programmatically when prefilled
+        modal._renderSummaryFor = renderForInput;
+    }
+    showModal(modalId);
+
+    // If caller provided a studentId, try to prefill the input and render result
+    if (prefillStudentId) {
+        try {
+            const modalEl = document.getElementById(modalId);
+            const input = modalEl.querySelector('#summary-student-input');
+            const student = students.find(s => s.id === prefillStudentId);
+            if (student && input) {
+                const val = student.rollNumber ? `${student.rollNumber} - ${student.name}` : student.name;
+                input.value = val;
+                // use the attached render helper if available
+                if (modalEl._renderSummaryFor) modalEl._renderSummaryFor(val);
+            }
+        } catch (e) {}
+    }
+}
+
+// Admin: show list of students with pending fees (any pending amount > 0)
+function showPendingStudentsReport() {
+    const modalId = 'admin-pending-students-modal';
+    let modal = document.getElementById(modalId);
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>Pending Students</h3>
+                <div id="pending-list" style="max-height:400px; overflow:auto; margin-top:8px;"></div>
+                <div class="modal-actions"><button id="pending-close" class="btn">Close</button></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#pending-close').addEventListener('click', () => closeModal(modalId));
+    }
+
+    // Build pending list
+    const container = modal.querySelector('#pending-list');
+    container.innerHTML = '';
+
+    students.forEach(student => {
+        // compute expected fees for this student
+        const fs = feeStructures.find(f => f.branch === student.branch && f.semester === student.semester);
+        
+        // Semester fee includes tuition, lab, library, development
+        const semesterFee = fs ? (fs.tuitionFee + fs.labFee + fs.libraryFee + fs.developmentFee) : 0;
+        
+        // Exam fee
+        const examFee = fs ? fs.examFee : 0;
+        
+        // Hostel fee (only if student is hostel resident)
+        const hostelFee = (fs && student.hostelResident) ? fs.hostelFee : 0;
+        
+        // Total expected
+        const totalExpected = semesterFee + examFee + hostelFee;
+        
+        // Get paid amount
+        const studentPayments = payments.filter(p => p.studentId === student.id);
+        const totalPaid = studentPayments.reduce((s,p) => s + p.amount, 0);
+        
+        // Calculate pending
+        const pending = Math.max(0, totalExpected - totalPaid);
+        
+        if (pending > 0) {
+            // Determine which fees are pending
+            let pendingFeesText = [];
+            if (semesterFee > 0 && totalPaid < semesterFee) {
+                pendingFeesText.push('Semester Fee (Tuition+Lab+Library+Development)');
+            }
+            if (examFee > 0 && totalPaid < (semesterFee + examFee)) {
+                pendingFeesText.push('Exam Fee');
+            }
+            if (hostelFee > 0 && totalPaid < totalExpected) {
+                pendingFeesText.push('Hostel Fee');
+            }
+            
+            const div = document.createElement('div');
+            div.className = 'payment-history-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid #eee;">
+                    <div>
+                        <div><strong>${student.name}</strong> (${student.rollNumber || '—'})</div>
+                        <div style="font-size:0.9em; color:#666">Branch: ${student.branch} • Semester: ${student.semester}</div>
+                        <div style="font-size:0.85em; color:#d9534f; margin-top:4px;"><strong>Pending Fees:</strong> ${pendingFeesText.join(', ')}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div>Pending: <strong>₹${pending.toLocaleString()}</strong></div>
+                        <div style="font-size:0.9em;color:#666">Paid: ₹${totalPaid.toLocaleString()}</div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+    });
+
+    showModal(modalId);
 }
